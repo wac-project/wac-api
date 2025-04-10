@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/SimonK1/ambulance-webapi/internal/db_service"
-	"github.com/SimonK1/ambulance-webapi/ambulance"
+	"github.com/wac-project/wac-api/internal/ambulance"
+	"github.com/wac-project/wac-api/internal/db_service"
 )
 
 // AmbulancePaymentsAPI defines the interface for payment-related operations.

@@ -10,8 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	// Import your model package which should contain the Ambulance struct definition.
-	"your_project/model"
+	"github.com/wac-project/wac-api/internal/ambulance"
 )
 
 // implAmbulanceAPI implements the AmbulanceManagementAPI interface.
