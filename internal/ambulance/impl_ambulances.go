@@ -1,4 +1,4 @@
-package ambulance_wl
+package ambulance
 
 import (
     "net/http"
