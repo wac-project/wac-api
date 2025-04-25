@@ -9,8 +9,6 @@ import (
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-
-	"github.com/wac-project/wac-api/internal/ambulance"
 )
 
 // implAmbulanceAPI implements the AmbulanceManagementAPI interface.
@@ -26,7 +24,7 @@ func NewAmbulanceAPI(col *mongo.Collection) AmbulanceManagementAPI {
 // updateAmbulanceFunc is a helper function that retrieves an ambulance by its ID from MongoDB,
 // then passes it to the provided closure for further processing. If the ambulance is updated,
 // it will be saved back to the database.
-func updateAmbulanceFunc(c *gin.Context, fn func(c *gin.Context, ambulance *model.Ambulance) (*model.Ambulance, interface{}, int), col *mongo.Collection) {
+func updateAmbulanceFunc(c *gin.Context, fn func(c *gin.Context, ambulance *Ambulance) (*Ambulance, interface{}, int), col *mongo.Collection) {
 	ambulanceId := c.Param("ambulanceId")
 	if ambulanceId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -39,7 +37,7 @@ func updateAmbulanceFunc(c *gin.Context, fn func(c *gin.Context, ambulance *mode
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var ambulance model.Ambulance
+	var ambulance Ambulance
 	if err := col.FindOne(ctx, bson.M{"_id": ambulanceId}).Decode(&ambulance); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"status":  http.StatusNotFound,
@@ -65,7 +63,7 @@ func updateAmbulanceFunc(c *gin.Context, fn func(c *gin.Context, ambulance *mode
 // CreateAmbulance handles POST /api/ambulances.
 // It creates a new ambulance in MongoDB.
 func (o *implAmbulanceAPI) CreateAmbulance(c *gin.Context) {
-	var ambulance model.Ambulance
+	var ambulance Ambulance
 	if err := c.ShouldBindJSON(&ambulance); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  http.StatusBadRequest,
@@ -75,8 +73,8 @@ func (o *implAmbulanceAPI) CreateAmbulance(c *gin.Context) {
 		return
 	}
 	// Generate a new UUID if no ID is provided.
-	if ambulance.ID == "" {
-		ambulance.ID = uuid.NewString()
+	if ambulance.Id == "" {
+		ambulance.Id = uuid.NewString()
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -96,11 +94,11 @@ func (o *implAmbulanceAPI) CreateAmbulance(c *gin.Context) {
 // DeleteAmbulance handles DELETE /api/ambulances/:ambulanceId.
 // It deletes the specified ambulance (and in a complete implementation, associated procedures) from MongoDB.
 func (o *implAmbulanceAPI) DeleteAmbulance(c *gin.Context) {
-	updateAmbulanceFunc(c, func(c *gin.Context, ambulance *model.Ambulance) (*model.Ambulance, interface{}, int) {
+	updateAmbulanceFunc(c, func(c *gin.Context, ambulance *Ambulance) (*Ambulance, interface{}, int) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		_, err := o.collection.DeleteOne(ctx, bson.M{"_id": ambulance.ID})
+		_, err := o.collection.DeleteOne(ctx, bson.M{"_id": ambulance.Id})
 		if err != nil {
 			return nil, gin.H{
 				"status":  http.StatusInternalServerError,
@@ -114,7 +112,7 @@ func (o *implAmbulanceAPI) DeleteAmbulance(c *gin.Context) {
 // GetAmbulanceById handles GET /api/ambulances/:ambulanceId.
 // It retrieves and returns the details of a specific ambulance.
 func (o *implAmbulanceAPI) GetAmbulanceById(c *gin.Context) {
-	updateAmbulanceFunc(c, func(c *gin.Context, ambulance *model.Ambulance) (*model.Ambulance, interface{}, int) {
+	updateAmbulanceFunc(c, func(c *gin.Context, ambulance *Ambulance) (*Ambulance, interface{}, int) {
 		return nil, ambulance, http.StatusOK
 	}, o.collection)
 }
@@ -135,7 +133,7 @@ func (o *implAmbulanceAPI) GetAmbulances(c *gin.Context) {
 	}
 	defer cursor.Close(ctx)
 
-	var ambulances []model.Ambulance
+	var ambulances []Ambulance
 	if err := cursor.All(ctx, &ambulances); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  http.StatusInternalServerError,
@@ -149,8 +147,8 @@ func (o *implAmbulanceAPI) GetAmbulances(c *gin.Context) {
 // UpdateAmbulance handles PUT /api/ambulances/:ambulanceId.
 // It updates the details of an existing ambulance in MongoDB.
 func (o *implAmbulanceAPI) UpdateAmbulance(c *gin.Context) {
-	updateAmbulanceFunc(c, func(c *gin.Context, ambulance *model.Ambulance) (*model.Ambulance, interface{}, int) {
-		var updated model.Ambulance
+	updateAmbulanceFunc(c, func(c *gin.Context, ambulance *Ambulance) (*Ambulance, interface{}, int) {
+		var updated Ambulance
 		if err := c.ShouldBindJSON(&updated); err != nil {
 			return nil, gin.H{
 				"status":  http.StatusBadRequest,
@@ -164,11 +162,11 @@ func (o *implAmbulanceAPI) UpdateAmbulance(c *gin.Context) {
 		if updated.Name != "" {
 			ambulance.Name = updated.Name
 		}
-		if updated.Type != "" {
-			ambulance.Type = updated.Type
+		if updated.Location != "" {
+			ambulance.Location = updated.Location
 		}
-		if updated.Driver != "" {
-			ambulance.Driver = updated.Driver
+		if updated.DriverName != "" {
+			ambulance.DriverName = updated.DriverName
 		}
 		// Add more field updates as necessary.
 
@@ -180,9 +178,9 @@ func (o *implAmbulanceAPI) UpdateAmbulance(c *gin.Context) {
 // It returns a summary of procedure costs for an ambulance.
 // For demonstration purposes, this returns a dummy summary.
 func (o *implAmbulanceAPI) GetAmbulanceSummary(c *gin.Context) {
-	updateAmbulanceFunc(c, func(c *gin.Context, ambulance *model.Ambulance) (*model.Ambulance, interface{}, int) {
+	updateAmbulanceFunc(c, func(c *gin.Context, ambulance *Ambulance) (*Ambulance, interface{}, int) {
 		summary := gin.H{
-			"ambulanceId": ambulance.ID,
+			"ambulanceId": ambulance.Id,
 			"totalCost":   1500.50,
 		}
 		return nil, summary, http.StatusOK

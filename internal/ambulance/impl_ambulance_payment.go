@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/wac-project/wac-api/internal/ambulance"
 	"github.com/wac-project/wac-api/internal/db_service"
 )
 
@@ -39,7 +38,7 @@ func (o implAmbulancePaymentAPI) CreatePayment(c *gin.Context) {
 		return
 	}
 
-	db, ok := value.(db_service.DbService[ambulance.Payment])
+	db, ok := value.(db_service.DbService[Payment])
 	if !ok {
 		c.JSON(
 			http.StatusInternalServerError,
@@ -51,7 +50,7 @@ func (o implAmbulancePaymentAPI) CreatePayment(c *gin.Context) {
 		return
 	}
 
-	var payment ambulance.Payment
+	var payment Payment
 	if err := c.BindJSON(&payment); err != nil {
 		c.JSON(
 			http.StatusBadRequest,
@@ -106,7 +105,7 @@ func (o implAmbulancePaymentAPI) DeletePayment(c *gin.Context) {
 		return
 	}
 
-	db, ok := value.(db_service.DbService[ambulance.Payment])
+	db, ok := value.(db_service.DbService[Payment])
 	if !ok {
 		c.JSON(
 			http.StatusInternalServerError,

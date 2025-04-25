@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/wac-project/wac-api/internal/ambulance"
 	"github.com/wac-project/wac-api/internal/db_service"
 )
 
@@ -39,7 +38,7 @@ func (o implAmbulanceProcedureAPI) CreateProcedure(c *gin.Context) {
 		return
 	}
 
-	db, ok := value.(db_service.DbService[ambulance.Procedure])
+	db, ok := value.(db_service.DbService[Procedure])
 	if !ok {
 		c.JSON(
 			http.StatusInternalServerError,
@@ -51,7 +50,7 @@ func (o implAmbulanceProcedureAPI) CreateProcedure(c *gin.Context) {
 		return
 	}
 
-	var procedure ambulance.Procedure
+	var procedure Procedure
 	if err := c.BindJSON(&procedure); err != nil {
 		c.JSON(
 			http.StatusBadRequest,
@@ -106,7 +105,7 @@ func (o implAmbulanceProcedureAPI) DeleteProcedure(c *gin.Context) {
 		return
 	}
 
-	db, ok := value.(db_service.DbService[ambulance.Procedure])
+	db, ok := value.(db_service.DbService[Procedure])
 	if !ok {
 		c.JSON(
 			http.StatusInternalServerError,
