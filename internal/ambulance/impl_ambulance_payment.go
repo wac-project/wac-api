@@ -1,142 +1,140 @@
 package ambulance
 
 import (
-	"net/http"
+    "context"
+    "log"
+    "net/http"
+    "time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/wac-project/wac-api/internal/db_service"
+    "github.com/gin-gonic/gin"
+    "github.com/google/uuid"
+    "github.com/wac-project/wac-api/internal/db_service"
 )
 
-// AmbulancePaymentsAPI defines the interface for payment-related operations.
-type AmbulancePaymentsAPI interface {
-	CreatePayment(c *gin.Context)
-	DeletePayment(c *gin.Context)
+// implPaymentAPI implements the PaymentManagementAPI interface.
+type implPaymentAPI struct{}
+
+// NewPaymentAPI returns an implementation of PaymentManagementAPI.
+func NewPaymentAPI() PaymentManagementAPI {
+    return &implPaymentAPI{}
 }
 
-// implAmbulancePaymentAPI is the concrete implementation of AmbulancePaymentsAPI.
-type implAmbulancePaymentAPI struct {
+// getPaymentDB extracts the DbService[Payment] from the context.
+func getPaymentDB(c *gin.Context) db_service.DbService[Payment] {
+    return c.MustGet("db_service").(db_service.DbService[Payment])
 }
 
-// NewAmbulancePaymentApi creates a new instance of AmbulancePaymentsAPI.
-func NewAmbulancePaymentApi() AmbulancePaymentsAPI {
-	return &implAmbulancePaymentAPI{}
+// withPaymentByID loads a Payment and calls fn; fn may return an updated doc.
+func withPaymentByID(
+    c *gin.Context,
+    fn func(*gin.Context, *Payment) (*Payment, interface{}, int),
+) {
+    id := c.Param("paymentId")
+    if id == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"message": "paymentId is required"})
+        return
+    }
+
+    db := getPaymentDB(c)
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    p, err := db.FindDocument(ctx, id)
+    if err != nil {
+        if err == db_service.ErrNotFound {
+            c.JSON(http.StatusNotFound, gin.H{"message": "Payment not found"})
+        } else {
+            log.Println("FindDocument error:", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal error"})
+        }
+        return
+    }
+
+    updated, result, status := fn(c, p)
+    if updated != nil {
+        if err := db.UpdateDocument(ctx, id, updated); err != nil {
+            log.Println("UpdateDocument error:", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to update payment"})
+            return
+        }
+    }
+    c.JSON(status, result)
 }
 
-// CreatePayment handles POST /api/payments.
-// It creates a new payment record using the generic database service.
-func (o implAmbulancePaymentAPI) CreatePayment(c *gin.Context) {
-	value, exists := c.Get("db_service")
-	if !exists {
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"status":  "Internal Server Error",
-				"message": "db not found",
-				"error":   "db not found",
-			})
-		return
-	}
+// CreatePayment implements POST /api/payments
+func (o *implPaymentAPI) CreatePayment(c *gin.Context) {
+    var p Payment
+    if err := c.ShouldBindJSON(&p); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request", "error": err.Error()})
+        return
+    }
+    if p.Id == "" {
+        p.Id = uuid.NewString()
+    }
 
-	db, ok := value.(db_service.DbService[Payment])
-	if !ok {
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"status":  "Internal Server Error",
-				"message": "db context is not of required type",
-				"error":   "cannot cast db context to db_service.DbService",
-			})
-		return
-	}
+    db := getPaymentDB(c)
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
 
-	var payment Payment
-	if err := c.BindJSON(&payment); err != nil {
-		c.JSON(
-			http.StatusBadRequest,
-			gin.H{
-				"status":  "Bad Request",
-				"message": "Invalid request body",
-				"error":   err.Error(),
-			})
-		return
-	}
-
-	// Generate a new UUID if the payment ID is empty.
-	if payment.Id == "" {
-		payment.Id = uuid.New().String()
-	}
-
-	err := db.CreateDocument(c, payment.Id, &payment)
-	switch err {
-	case nil:
-		c.JSON(http.StatusCreated, payment)
-	case db_service.ErrConflict:
-		c.JSON(
-			http.StatusConflict,
-			gin.H{
-				"status":  "Conflict",
-				"message": "Payment already exists",
-				"error":   err.Error(),
-			})
-	default:
-		c.JSON(
-			http.StatusBadGateway,
-			gin.H{
-				"status":  "Bad Gateway",
-				"message": "Failed to create payment in database",
-				"error":   err.Error(),
-			})
-	}
+    if err := db.CreateDocument(ctx, p.Id, &p); err != nil {
+        switch err {
+        case db_service.ErrConflict:
+            c.JSON(http.StatusConflict, gin.H{"message": "Payment already exists"})
+        default:
+            log.Println("CreateDocument error:", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create payment"})
+        }
+        return
+    }
+    c.JSON(http.StatusCreated, p)
 }
 
-// DeletePayment handles DELETE /api/payments/:paymentId.
-// It deletes the specified payment record from the database.
-func (o implAmbulancePaymentAPI) DeletePayment(c *gin.Context) {
-	value, exists := c.Get("db_service")
-	if !exists {
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"status":  "Internal Server Error",
-				"message": "db_service not found",
-				"error":   "db_service not found",
-			})
-		return
-	}
+// GetPaymentById implements GET /api/payments/:paymentId
+func (o *implPaymentAPI) GetPaymentById(c *gin.Context) {
+    withPaymentByID(c, func(_ *gin.Context, p *Payment) (*Payment, interface{}, int) {
+        return nil, p, http.StatusOK
+    })
+}
 
-	db, ok := value.(db_service.DbService[Payment])
-	if !ok {
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"status":  "Internal Server Error",
-				"message": "db_service context is not of type db_service.DbService",
-				"error":   "cannot cast db_service context to db_service.DbService",
-			})
-		return
-	}
+// GetPayments implements GET /api/payments
+func (o *implPaymentAPI) GetPayments(c *gin.Context) {
+    // Listing is not supported by DbService interface
+    c.JSON(http.StatusNotImplemented, gin.H{
+        "message": "Listing payments is not supported by the current DbService interface",
+    })
+}
 
-	paymentId := c.Param("paymentId")
-	err := db.DeleteDocument(c, paymentId)
-	switch err {
-	case nil:
-		c.AbortWithStatus(http.StatusNoContent)
-	case db_service.ErrNotFound:
-		c.JSON(
-			http.StatusNotFound,
-			gin.H{
-				"status":  "Not Found",
-				"message": "Payment not found",
-				"error":   err.Error(),
-			})
-	default:
-		c.JSON(
-			http.StatusBadGateway,
-			gin.H{
-				"status":  "Bad Gateway",
-				"message": "Failed to delete payment from database",
-				"error":   err.Error(),
-			})
-	}
+// UpdatePayment implements PUT /api/payments/:paymentId
+func (o *implPaymentAPI) UpdatePayment(c *gin.Context) {
+    withPaymentByID(c, func(_ *gin.Context, existing *Payment) (*Payment, interface{}, int) {
+        var upd Payment
+        if err := c.ShouldBindJSON(&upd); err != nil {
+            return nil, gin.H{"message": "Invalid request", "error": err.Error()}, http.StatusBadRequest
+        }
+        if upd.Insurance != "" {
+            existing.Insurance = upd.Insurance
+        }
+        if upd.Amount != 0 {
+            existing.Amount = upd.Amount
+        }
+        if upd.Timestamp != "" {
+            existing.Timestamp = upd.Timestamp
+        }
+        return existing, existing, http.StatusOK
+    })
+}
+
+// DeletePayment implements DELETE /api/payments/:paymentId
+func (o *implPaymentAPI) DeletePayment(c *gin.Context) {
+    withPaymentByID(c, func(_ *gin.Context, p *Payment) (*Payment, interface{}, int) {
+        db := getPaymentDB(c)
+        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cancel()
+
+        if err := db.DeleteDocument(ctx, p.Id); err != nil {
+            log.Println("DeleteDocument error:", err)
+            return nil, gin.H{"message": "Failed to delete payment"}, http.StatusInternalServerError
+        }
+        return nil, nil, http.StatusNoContent
+    })
 }

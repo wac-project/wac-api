@@ -12,21 +12,24 @@ package ambulance
 
 type Procedure struct {
 
-	// Unique identifier of the procedure.
-	Id string `json:"id"`
+    // Unique identifier of the procedure.
+    Id string `json:"id"`
 
-	// Name or identifier of the patient.
-	Patient string `json:"patient"`
+    // Name or identifier of the patient.
+    Patient string `json:"patient"`
 
-	// Type of visit.
-	VisitType string `json:"visitType"`
+    // Type of visit (e.g., emergency, checkup, follow-up).
+    VisitType string `json:"visit_type"`
 
-	// Price of the procedure.
-	Price float32 `json:"price"`
+    // Price of the procedure.
+    Price float64 `json:"price"`
 
-	// Payer for the procedure.
-	Payer string `json:"payer"`
+    // Payer for the procedure.
+    Payer string `json:"payer"`
 
-	// Identifier of the ambulance associated with the procedure.
-	AmbulanceId string `json:"ambulanceId"`
+    // Identifier of the ambulance associated with the procedure.
+    AmbulanceId string `json:"ambulance_id"`
+
+    // Date and time of the procedure in ISO 8601 format.
+    Timestamp string `json:"timestamp,omitempty"`
 }

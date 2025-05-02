@@ -12,15 +12,18 @@ package ambulance
 
 type Payment struct {
 
-	// Unique identifier of the payment record.
-	Id string `json:"id"`
+    // Unique identifier of the payment record.
+    Id string `json:"id"`
 
-	// Identifier of the related procedure.
-	ProcedureId string `json:"procedureId"`
+    // Identifier of the related procedure.
+    ProcedureId string `json:"procedure_id"`
 
-	// Insurance or payer for the procedure.
-	Insurance string `json:"insurance"`
+    // Insurance or payer for the procedure.
+    Insurance string `json:"insurance"`
 
-	// Payment amount.
-	Amount float32 `json:"amount"`
+    // Payment amount.
+    Amount float64 `json:"amount"`
+
+    // Date and time when the payment was made (ISO 8601 format).
+    Timestamp string `json:"timestamp,omitempty"`
 }

@@ -12,15 +12,21 @@ package ambulance
 
 type Ambulance struct {
 
-	// Unique identifier of the ambulance.
-	Id string `json:"id"`
+    // Unique identifier of the ambulance.
+    Id string `json:"id"`
 
-	// Name of the ambulance.
-	Name string `json:"name"`
+    // Name of the ambulance.
+    Name string `json:"name"`
 
-	// Location or base of the ambulance.
-	Location string `json:"location"`
+    // Location or base of the ambulance.
+    Location string `json:"location"`
 
-	// Name of the driver in charge.
-	DriverName string `json:"driverName"`
+    // Department the ambulance belongs to.
+    Department string `json:"department"`
+
+    // Capacity of the ambulance (number of patients it can serve).
+    Capacity int `json:"capacity"`
+
+    // Current status of the ambulance (e.g., Available, Occupied).
+    Status string `json:"status"`
 }

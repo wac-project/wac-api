@@ -105,7 +105,6 @@ func NewMongoService[DocType interface{}](config MongoServiceConfig) DbService[D
 }
 
 func (m *mongoSvc[DocType]) connect(ctx context.Context) (*mongo.Client, error) {
-	// optimistic check
 	client := m.client.Load()
 	if client != nil {
 		return client, nil
@@ -113,7 +112,7 @@ func (m *mongoSvc[DocType]) connect(ctx context.Context) (*mongo.Client, error) 
 
 	m.clientLock.Lock()
 	defer m.clientLock.Unlock()
-	// pesimistic check
+
 	client = m.client.Load()
 	if client != nil {
 		return client, nil
@@ -166,11 +165,10 @@ func (m *mongoSvc[DocType]) CreateDocument(ctx context.Context, id string, docum
 	collection := db.Collection(m.Collection)
 	result := collection.FindOne(ctx, bson.D{{Key: "id", Value: id}})
 	switch result.Err() {
-	case nil: // no error means there is conflicting document
+	case nil:
 		return ErrConflict
 	case mongo.ErrNoDocuments:
-		// do nothing, this is expected
-	default: // other errors - return them
+	default:
 		return result.Err()
 	}
 
@@ -192,7 +190,7 @@ func (m *mongoSvc[DocType]) FindDocument(ctx context.Context, id string) (*DocTy
 	case nil:
 	case mongo.ErrNoDocuments:
 		return nil, ErrNotFound
-	default: // other errors - return them
+	default:
 		return nil, result.Err()
 	}
 	var document *DocType
@@ -216,7 +214,7 @@ func (m *mongoSvc[DocType]) UpdateDocument(ctx context.Context, id string, docum
 	case nil:
 	case mongo.ErrNoDocuments:
 		return ErrNotFound
-	default: // other errors - return them
+	default:
 		return result.Err()
 	}
 	_, err = collection.ReplaceOne(ctx, bson.D{{Key: "id", Value: id}}, document)
@@ -237,7 +235,7 @@ func (m *mongoSvc[DocType]) DeleteDocument(ctx context.Context, id string) error
 	case nil:
 	case mongo.ErrNoDocuments:
 		return ErrNotFound
-	default: // other errors - return them
+	default:
 		return result.Err()
 	}
 	_, err = collection.DeleteOne(ctx, bson.D{{Key: "id", Value: id}})
