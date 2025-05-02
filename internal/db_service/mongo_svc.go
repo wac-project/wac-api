@@ -16,12 +16,14 @@ import (
 )
 
 type DbService[DocType interface{}] interface {
-	CreateDocument(ctx context.Context, id string, document *DocType) error
-	FindDocument(ctx context.Context, id string) (*DocType, error)
-	UpdateDocument(ctx context.Context, id string, document *DocType) error
-	DeleteDocument(ctx context.Context, id string) error
-	Disconnect(ctx context.Context) error
+    CreateDocument(ctx context.Context, id string, document *DocType) error
+    FindDocument(ctx context.Context, id string) (*DocType, error)
+    ListDocuments(ctx context.Context) ([]DocType, error)               // ← new
+    UpdateDocument(ctx context.Context, id string, document *DocType) error
+    DeleteDocument(ctx context.Context, id string) error
+    Disconnect(ctx context.Context) error
 }
+
 
 var ErrNotFound = fmt.Errorf("document not found")
 var ErrConflict = fmt.Errorf("conflict: document already exists")
@@ -240,4 +242,34 @@ func (m *mongoSvc[DocType]) DeleteDocument(ctx context.Context, id string) error
 	}
 	_, err = collection.DeleteOne(ctx, bson.D{{Key: "id", Value: id}})
 	return err
+}
+
+func (m *mongoSvc[DocType]) ListDocuments(ctx context.Context) ([]DocType, error) {
+    ctx, cancel := context.WithTimeout(ctx, m.Timeout)
+    defer cancel()
+
+    client, err := m.connect(ctx)
+    if err != nil {
+        return nil, err
+    }
+    coll := client.Database(m.DbName).Collection(m.Collection)
+
+    cursor, err := coll.Find(ctx, bson.D{}) // no filter = list all
+    if err != nil {
+        return nil, err
+    }
+    defer cursor.Close(ctx)
+
+    var results []DocType
+    for cursor.Next(ctx) {
+        var doc DocType
+        if err := cursor.Decode(&doc); err != nil {
+            return nil, err
+        }
+        results = append(results, doc)
+    }
+    if err := cursor.Err(); err != nil {
+        return nil, err
+    }
+    return results, nil
 }

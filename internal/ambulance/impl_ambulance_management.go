@@ -117,9 +117,19 @@
  }
  
  func (o *implAmbulanceAPI) GetAmbulances(c *gin.Context) {
-	 // Not supported in current DbService interface.
-	 c.JSON(http.StatusNotImplemented, gin.H{"message": "Listing ambulances is not supported by the current DbService interface"})
- }
+    db := getDB(c)
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    list, err := db.ListDocuments(ctx)
+    if err != nil {
+        log.Println("ListDocuments error:", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to list ambulances"})
+        return
+    }
+    c.JSON(http.StatusOK, list)
+}
+
  
  func (o *implAmbulanceAPI) UpdateAmbulance(c *gin.Context) {
 	 withAmbulanceByID(c, func(c *gin.Context, ambulance *Ambulance) (*Ambulance, interface{}, int) {

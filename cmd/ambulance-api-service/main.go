@@ -34,7 +34,7 @@ func main() {
 
     corsMiddleware := cors.New(cors.Config{
         AllowOrigins:     []string{"*"},
-        AllowMethods:     []string{"GET", "PUT", "POST", "DELETE", "PATCH"},
+        AllowMethods:     []string{"GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"},
         AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
         ExposeHeaders:    []string{""},
         AllowCredentials: false,
