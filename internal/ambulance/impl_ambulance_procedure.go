@@ -21,7 +21,7 @@ func NewProcedureAPI() ProcedureManagementAPI {
 
 // getProcedureDB extracts the DbService[Procedure] from the context.
 func getProcedureDB(c *gin.Context) db_service.DbService[Procedure] {
-    return c.MustGet("db_service").(db_service.DbService[Procedure])
+    return c.MustGet("db_service_procedure").(db_service.DbService[Procedure])
 }
 
 // withProcedureByID loads a Procedure and calls fn; fn may return an updated doc.
@@ -96,13 +96,34 @@ func (o *implProcedureAPI) GetProcedureById(c *gin.Context) {
     })
 }
 
-// GetProcedures implements GET /api/procedures
+
 func (o *implProcedureAPI) GetProcedures(c *gin.Context) {
-    // Listing is not supported by DbService interface
-    c.JSON(http.StatusNotImplemented, gin.H{
-        "message": "Listing procedures is not supported by the current DbService interface",
-    })
+    db := getProcedureDB(c)
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    ambulanceID := c.Query("ambulance_id")
+
+    var (
+        procedures any
+        err        error
+    )
+
+    if ambulanceID != "" {
+        procedures, err = db.FindDocumentsByField(ctx, "ambulance_id", ambulanceID)
+    } else {
+        procedures, err = db.ListDocuments(ctx)
+    }
+
+    if err != nil {
+        log.Println("Error retrieving procedures:", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve procedures"})
+        return
+    }
+
+    c.JSON(http.StatusOK, procedures)
 }
+
 
 // UpdateProcedure implements PUT /api/procedures/:procedureId
 func (o *implProcedureAPI) UpdateProcedure(c *gin.Context) {

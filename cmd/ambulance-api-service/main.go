@@ -42,12 +42,22 @@ func main() {
     })
     engine.Use(corsMiddleware)
 
-    dbService := db_service.NewMongoService[ambulance.Ambulance](db_service.MongoServiceConfig{})
-    defer dbService.Disconnect(context.Background())
+    // one service per collection/type
+   dbAmbSvc  := db_service.NewMongoService[ambulance.Ambulance](db_service.MongoServiceConfig{Collection: "ambulance"})
+   dbPaySvc  := db_service.NewMongoService[ambulance.Payment](  db_service.MongoServiceConfig{Collection: "payment"})
+   dbProcSvc := db_service.NewMongoService[ambulance.Procedure](db_service.MongoServiceConfig{Collection: "procedure"})
 
-    engine.Use(func(ctx *gin.Context) {
-        ctx.Set("db_service", dbService)
-        ctx.Next()
+   // tear down all three on exit
+   defer dbAmbSvc.Disconnect(context.Background())
+   defer dbPaySvc.Disconnect(context.Background())
+   defer dbProcSvc.Disconnect(context.Background())
+
+   // inject each under its own key
+   engine.Use(func(ctx *gin.Context) {
+       ctx.Set("db_service_ambulance", dbAmbSvc)
+       ctx.Set("db_service_payment",   dbPaySvc)
+       ctx.Set("db_service_procedure",  dbProcSvc)
+           ctx.Next()
     })
 
     handleFunctions := &ambulance.ApiHandleFunctions{

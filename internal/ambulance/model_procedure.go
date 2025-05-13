@@ -15,6 +15,12 @@ type Procedure struct {
     // Unique identifier of the procedure.
     Id string `json:"id"`
 
+    // Name of the procedure.
+    Name string `json:"name"`
+
+    // Description of the procedure.
+    Description string `json:"description"`
+
     // Name or identifier of the patient.
     Patient string `json:"patient"`
 

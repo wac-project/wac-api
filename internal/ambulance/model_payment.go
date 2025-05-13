@@ -15,6 +15,12 @@ type Payment struct {
     // Unique identifier of the payment record.
     Id string `json:"id"`
 
+    // Name of the payment or transaction.
+    Name string `json:"name,omitempty"`
+
+    // Description of the payment.
+    Description string `json:"description,omitempty"`
+
     // Identifier of the related procedure.
     ProcedureId string `json:"procedure_id"`
 
