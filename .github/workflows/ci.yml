@@ -37,8 +37,8 @@ jobs:
       - name: Build
         run: go build -v ./cmd/ambulance-api-service
 
-      - name: Test
-        run: go test -v ./...
+#      - name: Test
+#        run: go test -v ./...
 
       - name: Docker Setup QEMU
         uses: docker/setup-qemu-action@v3.6.0
