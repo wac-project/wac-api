@@ -16,15 +16,14 @@ import (
 )
 
 type DbService[DocType interface{}] interface {
-    CreateDocument(ctx context.Context, id string, document *DocType) error
-    FindDocument(ctx context.Context, id string) (*DocType, error)
-    ListDocuments(ctx context.Context) ([]DocType, error)               // ← new
-    UpdateDocument(ctx context.Context, id string, document *DocType) error
-    DeleteDocument(ctx context.Context, id string) error
-    Disconnect(ctx context.Context) error
+	CreateDocument(ctx context.Context, id string, document *DocType) error
+	FindDocument(ctx context.Context, id string) (*DocType, error)
+	ListDocuments(ctx context.Context) ([]DocType, error) // ← new
+	UpdateDocument(ctx context.Context, id string, document *DocType) error
+	DeleteDocument(ctx context.Context, id string) error
+	Disconnect(ctx context.Context) error
 	FindDocumentsByField(ctx context.Context, fieldName string, value any) ([]*DocType, error)
 }
-
 
 var ErrNotFound = fmt.Errorf("document not found")
 var ErrConflict = fmt.Errorf("conflict: document already exists")
@@ -246,66 +245,66 @@ func (m *mongoSvc[DocType]) DeleteDocument(ctx context.Context, id string) error
 }
 
 func (m *mongoSvc[DocType]) ListDocuments(ctx context.Context) ([]DocType, error) {
-    ctx, cancel := context.WithTimeout(ctx, m.Timeout)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(ctx, m.Timeout)
+	defer cancel()
 
-    client, err := m.connect(ctx)
-    if err != nil {
-        return nil, err
-    }
-    coll := client.Database(m.DbName).Collection(m.Collection)
+	client, err := m.connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	coll := client.Database(m.DbName).Collection(m.Collection)
 
-    cursor, err := coll.Find(ctx, bson.D{}) // no filter = list all
-    if err != nil {
-        return nil, err
-    }
-    defer cursor.Close(ctx)
+	cursor, err := coll.Find(ctx, bson.D{}) // no filter = list all
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
 
-    var results []DocType
-    for cursor.Next(ctx) {
-        var doc DocType
-        if err := cursor.Decode(&doc); err != nil {
-            return nil, err
-        }
-        results = append(results, doc)
-    }
-    if err := cursor.Err(); err != nil {
-        return nil, err
-    }
-    return results, nil
+	var results []DocType
+	for cursor.Next(ctx) {
+		var doc DocType
+		if err := cursor.Decode(&doc); err != nil {
+			return nil, err
+		}
+		results = append(results, doc)
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	return results, nil
 }
 
 func (m *mongoSvc[DocType]) FindDocumentsByField(ctx context.Context, fieldName string, value any) ([]*DocType, error) {
-    ctx, cancel := context.WithTimeout(ctx, m.Timeout)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(ctx, m.Timeout)
+	defer cancel()
 
-    client, err := m.connect(ctx)
-    if err != nil {
-        return nil, err
-    }
+	client, err := m.connect(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-    coll := client.Database(m.DbName).Collection(m.Collection)
+	coll := client.Database(m.DbName).Collection(m.Collection)
 
-    filter := bson.D{{Key: fieldName, Value: value}}
-    cursor, err := coll.Find(ctx, filter)
-    if err != nil {
-        return nil, err
-    }
-    defer cursor.Close(ctx)
+	filter := bson.D{{Key: fieldName, Value: value}}
+	cursor, err := coll.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
 
-    var results []*DocType
-    for cursor.Next(ctx) {
-        var doc DocType
-        if err := cursor.Decode(&doc); err != nil {
-            return nil, err
-        }
-        docCopy := doc // capture current doc in memory
-        results = append(results, &docCopy)
-    }
+	var results []*DocType
+	for cursor.Next(ctx) {
+		var doc DocType
+		if err := cursor.Decode(&doc); err != nil {
+			return nil, err
+		}
+		docCopy := doc // capture current doc in memory
+		results = append(results, &docCopy)
+	}
 
-    if err := cursor.Err(); err != nil {
-        return nil, err
-    }
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
 
-    return results, nil
+	return results, nil
 }
