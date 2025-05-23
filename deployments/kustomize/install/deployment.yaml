@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wac-webapi
+  name: kdb-wac-webapi
 spec:
   replicas: 1
   selector:
