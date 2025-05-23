@@ -8,9 +8,6 @@ info:
   title: Hospital Management API
   contact:
     email: xkokavecs@stuba.sk
-  license:
-    name: CC BY 4.0
-    url: "https://creativecommons.org/licenses/by/4.0/"
 tags:
   - name: ambulanceManagement
     description: Manage hospital ambulances including creation, update, deletion and viewing a summary of procedure costs.
@@ -361,88 +358,111 @@ components:
   schemas:
     Ambulance:
       type: object
-      required:
-        - id
-        - name
-        - location
-        - driverName
+      required: [id, name, location, department, capacity, status]
       properties:
         id:
           type: string
-          example: amb001
           description: Unique identifier of the ambulance.
+          example: amb001
         name:
           type: string
-          example: Ambulancia Hlavná
           description: Name of the ambulance.
+          example: Ambulancia Hlavná
         location:
           type: string
-          example: Hlavná ulica 123
           description: Location or base of the ambulance.
-        driverName:
+          example: Hlavná ulica 123
+        department:
           type: string
-          example: Ján Novák
-          description: Name of the driver in charge.
+          description: Department the ambulance belongs to.
+          example: Internal Medicine
+        capacity:
+          type: integer
+          description: Capacity of the ambulance (number of patients it can serve).
+          example: 5
+        status:
+          type: string
+          description: Current status of the ambulance (e.g., Available, Occupied).
+          example: Available
+
     Procedure:
       type: object
-      required:
-        - id
-        - patient
-        - visitType
-        - price
-        - payer
-        - ambulanceId
+      required: [id, name, description, patient, visit_type, price, payer, ambulance_id]
       properties:
         id:
           type: string
-          example: prc001
           description: Unique identifier of the procedure.
+          example: proc001
+        name:
+          type: string
+          description: Name of the procedure.
+          example: Röntgen hrudníka
+        description:
+          type: string
+          description: Description of the procedure.
+          example: Routine chest X-ray
         patient:
           type: string
-          example: Peter Horváth
           description: Name or identifier of the patient.
-        visitType:
+          example: ID12345
+        visit_type:
           type: string
-          example: konzultácia
-          description: Type of visit.
+          description: Type of visit (e.g., emergency, follow-up).
+          example: emergency
         price:
           type: number
           format: float
-          example: 200.50
           description: Price of the procedure.
+          example: 120.5
         payer:
           type: string
-          example: poisťovňa XYZ
           description: Payer for the procedure.
-        ambulanceId:
+          example: Insurance A
+        ambulance_id:
           type: string
-          example: amb001
           description: Identifier of the ambulance associated with the procedure.
+          example: amb001
+        timestamp:
+          type: string
+          format: date-time
+          description: Date and time of the procedure (ISO 8601).
+          example: 2025-05-21T09:30:00Z
+
     Payment:
       type: object
-      required:
-        - id
-        - procedureId
-        - insurance
-        - amount
+      required: [id, procedure_id, insurance, amount]
       properties:
         id:
           type: string
-          example: pay001
           description: Unique identifier of the payment record.
-        procedureId:
+          example: pay001
+        name:
           type: string
-          example: prc001
+          description: Name of the payment or transaction.
+          example: Payment from insurer
+        description:
+          type: string
+          description: Description of the payment.
+          example: Payment for X-ray procedure
+        procedure_id:
+          type: string
           description: Identifier of the related procedure.
+          example: proc001
         insurance:
           type: string
-          example: poisťovňa XYZ
           description: Insurance or payer for the procedure.
+          example: Insurance A
         amount:
           type: number
           format: float
-          example: 200.50
           description: Payment amount.
+          example: 120.5
+        timestamp:
+          type: string
+          format: date-time
+          description: Date and time when the payment was made (ISO 8601).
+          example: 2025-05-21T10:00:00Z
+
   examples:
     AmbulanceExample:
       summary: Example ambulance

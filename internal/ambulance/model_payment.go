@@ -10,26 +10,30 @@
 
 package ambulance
 
+import (
+	"time"
+)
+
 type Payment struct {
 
-    // Unique identifier of the payment record.
-    Id string `json:"id"`
+	// Unique identifier of the payment record.
+	Id string `json:"id"`
 
-    // Name of the payment or transaction.
-    Name string `json:"name,omitempty"`
+	// Name of the payment or transaction.
+	Name string `json:"name,omitempty"`
 
-    // Description of the payment.
-    Description string `json:"description,omitempty"`
+	// Description of the payment.
+	Description string `json:"description,omitempty"`
 
-    // Identifier of the related procedure.
-    ProcedureId string `json:"procedure_id"`
+	// Identifier of the related procedure.
+	ProcedureId string `json:"procedure_id"`
 
-    // Insurance or payer for the procedure.
-    Insurance string `json:"insurance"`
+	// Insurance or payer for the procedure.
+	Insurance string `json:"insurance"`
 
-    // Payment amount.
-    Amount float64 `json:"amount"`
+	// Payment amount.
+	Amount float32 `json:"amount"`
 
-    // Date and time when the payment was made (ISO 8601 format).
-    Timestamp string `json:"timestamp,omitempty"`
+	// Date and time when the payment was made (ISO 8601).
+	Timestamp time.Time `json:"timestamp,omitempty"`
 }

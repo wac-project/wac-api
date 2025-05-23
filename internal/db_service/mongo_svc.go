@@ -260,7 +260,7 @@ func (m *mongoSvc[DocType]) ListDocuments(ctx context.Context) ([]DocType, error
 	}
 	defer cursor.Close(ctx)
 
-	var results []DocType
+	results := make([]DocType, 0)
 	for cursor.Next(ctx) {
 		var doc DocType
 		if err := cursor.Decode(&doc); err != nil {

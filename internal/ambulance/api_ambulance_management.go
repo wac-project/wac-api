@@ -16,33 +16,31 @@ import (
 
 type AmbulanceManagementAPI interface {
 
+	// CreateAmbulance Post /api/ambulances
+	// Create a new ambulance
+	CreateAmbulance(c *gin.Context)
 
-    // CreateAmbulance Post /api/ambulances
-    // Create a new ambulance 
-     CreateAmbulance(c *gin.Context)
+	// DeleteAmbulance Delete /api/ambulances/:ambulanceId
+	// Delete an ambulance and its associated procedures
+	DeleteAmbulance(c *gin.Context)
 
-    // DeleteAmbulance Delete /api/ambulances/:ambulanceId
-    // Delete an ambulance and its associated procedures 
-     DeleteAmbulance(c *gin.Context)
+	// GetAmbulanceById Get /api/ambulances/:ambulanceId
+	// Get ambulance details
+	GetAmbulanceById(c *gin.Context)
 
-    // GetAmbulanceById Get /api/ambulances/:ambulanceId
-    // Get ambulance details 
-     GetAmbulanceById(c *gin.Context)
+	// GetAmbulanceSummary Get /api/ambulances/:ambulanceId/summary
+	// Get summary of procedure costs for an ambulance
+	GetAmbulanceSummary(c *gin.Context)
 
-    // GetAmbulanceSummary Get /api/ambulances/:ambulanceId/summary
-    // Get summary of procedure costs for an ambulance 
-     GetAmbulanceSummary(c *gin.Context)
+	// GetAmbulances Get /api/ambulances
+	// Get list of ambulances
+	GetAmbulances(c *gin.Context)
 
-    // GetAmbulances Get /api/ambulances
-    // Get list of ambulances 
-     GetAmbulances(c *gin.Context)
+	// GetProceduresByAmbulance Get /api/ambulances/:ambulanceId/procedures
+	// Get procedures for an ambulance
+	GetProceduresByAmbulance(c *gin.Context)
 
-    // UpdateAmbulance Put /api/ambulances/:ambulanceId
-    // Update ambulance details 
-    UpdateAmbulance(c *gin.Context)
-     
-    // GetProceduresByAmbulance Get /api/ambulances/:ambulanceId/procedures
-    // Retrieve all procedures linked to an ambulance
-    GetProceduresByAmbulance(c *gin.Context)
-
+	// UpdateAmbulance Put /api/ambulances/:ambulanceId
+	// Update ambulance details
+	UpdateAmbulance(c *gin.Context)
 }
